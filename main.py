@@ -5,13 +5,7 @@ from player import Player
 from asteroid import Asteroid
 from asteroidfield import AsteroidField
 from shot import Shot
-
-class ScoreManager:
-    def __init__(self):
-        self.score = 0
-
-    def add_points(self, points):
-        self.score += points
+from hud import HUD
 
 def main():
     pygame.init()
@@ -19,8 +13,7 @@ def main():
     clock = pygame.time.Clock()
     
     dt = 0
-    score_manager = ScoreManager()
-    font = pygame.font.Font(None, 36)
+    hud = HUD()
 
     updatable = pygame.sprite.Group()
     drawable = pygame.sprite.Group()
@@ -32,7 +25,7 @@ def main():
 
     Asteroid.containers = (asteroids, updatable, drawable)
     AsteroidField.containers = (updatable)
-    asteroid_field = AsteroidField(score_manager=score_manager)
+    asteroid_field = AsteroidField(hud=hud)
 
     Shot.containers = (shots, updatable, drawable)
 
@@ -46,24 +39,31 @@ def main():
             obj.update(dt)
 
         for obj in asteroids:
-            if player.collision(obj):
-                print("Game over!")
-                sys.exit()
+            if not player.invulnerable:
+                if player.collision(obj):
+                    player.invulnerable = True
+                    player.invulnerability_timer = 3
+                    player.lives -= 1
+                    if player.lives <= 0:
+                        print("Game over!")
+                        sys.exit()
+                    else:
+                        # Respawn player at center of screen
+                        player.position.x = SCREEN_WIDTH / 2
+                        player.position.y = SCREEN_HEIGHT / 2
 
-            for x in shots:
-                if x.collision(obj):
-                    print(f"Asteroid radius: {obj.radius}, Min radius for split: {ASTEROID_MIN_RADIUS}")
-                    x.kill()
-                    obj.split()
+                for x in shots:
+                    if x.collision(obj):
+                        x.kill()
+                        obj.split()
 
-        screen.fill("black")     
-
-        # Create surface for score and draw in onto the screen
-        score_text = font.render(f"Score: {score_manager.score}", True, "white")
-        screen.blit(score_text, (10, 10))  # (10, 10) gives a 10-pixel margin from the top-left corner
+        screen.fill("black")
 
         for obj in drawable:
             obj.draw(screen)
+
+        # Add HUD drawing here
+        hud.draw(screen, player)    
 
         pygame.display.flip()
 

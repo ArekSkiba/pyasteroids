@@ -8,6 +8,9 @@ class Player(CircleShape):
         super().__init__(x, y, PLAYER_RADIUS)
         self.rotation = 0
         self.timer = 0
+        self.lives = 3
+        self.invulnerable = False
+        self.invulnerability_timer = 0
 
     # in the player class
     def triangle(self):
@@ -19,7 +22,9 @@ class Player(CircleShape):
         return [a, b, c]
     
     def draw(self, screen):
-        pygame.draw.polygon(screen, "white", self.triangle(), 2)
+        # Only draw if not invulnerable OR if timer is even
+        if not self.invulnerable or int(self.invulnerability_timer * 10) % 2 == 0:
+            pygame.draw.polygon(screen, "white", self.triangle(), 2)
 
     def rotate(self, dt):
         self.rotation += PLAYER_TURN_SPEED * dt
@@ -32,11 +37,15 @@ class Player(CircleShape):
         if self.timer <= 0:
             bullet = Shot(self.position, SHOT_RADIUS)
             bullet.velocity = pygame.Vector2(0, 1).rotate(self.rotation) * PLAYER_SHOOT_SPEED
+            self.timer = PLAYER_SHOOT_COOLDOWN
 
-        self.timer = PLAYER_SHOOT_COOLDOWN
 
     def update(self, dt):
         self.timer -= dt
+        self.invulnerability_timer -= dt
+        if self.invulnerability_timer <= 0:
+            self.invulnerable = False
+
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_a]:

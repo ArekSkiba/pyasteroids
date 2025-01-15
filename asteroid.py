@@ -4,27 +4,27 @@ from constants import *
 from circleshape import CircleShape
 
 class Asteroid(CircleShape):
-    def __init__(self, x, y, radius, score_manager=None):
+    def __init__(self, x, y, radius, hud=None):
         super().__init__(x, y, radius)
-        self.score_manager = score_manager
+        self.hud = hud
 
     def split(self):
         self.kill()
         if self.radius <= ASTEROID_MIN_RADIUS:
-            if self.score_manager:
-                self.score_manager.add_points(2)
+            if self.hud:
+                self.hud.update_score(2)
             return
         else:
-            if self.score_manager:
-                self.score_manager.add_points(1)
+            if self.hud:
+                self.hud.update_score(1)
         
             random_angle = random.uniform(20,50)
             vector_one = self.velocity.rotate(random_angle)
             vector_two = self.velocity.rotate(-random_angle)
             new_radius = self.radius - ASTEROID_MIN_RADIUS
 
-            asteroid_one = Asteroid(self.position.x, self.position.y, new_radius, score_manager=self.score_manager)
-            asteroid_two = Asteroid(self.position.x, self.position.y, new_radius, score_manager=self.score_manager)
+            asteroid_one = Asteroid(self.position.x, self.position.y, new_radius, hud=self.hud)
+            asteroid_two = Asteroid(self.position.x, self.position.y, new_radius, hud=self.hud)
             asteroid_one.velocity = vector_one  * 1.2
             asteroid_two.velocity = vector_two  * 1.2
 
