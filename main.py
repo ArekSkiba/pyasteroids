@@ -5,14 +5,16 @@ from player import Player
 from asteroid import Asteroid
 from asteroidfield import AsteroidField
 from shot import Shot
+from particle import Particle
 from hud import HUD
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
     clock = pygame.time.Clock()
     
     dt = 0
+    particles = []
     hud = HUD()
 
     updatable = pygame.sprite.Group()
@@ -28,7 +30,6 @@ def main():
     asteroid_field = AsteroidField(hud=hud)
 
     Shot.containers = (shots, updatable, drawable)
-
 
     while True:
         for event in pygame.event.get():
@@ -52,15 +53,28 @@ def main():
                         player.position.x = SCREEN_WIDTH / 2
                         player.position.y = SCREEN_HEIGHT / 2
 
-                for x in shots:
-                    if x.collision(obj):
-                        x.kill()
-                        obj.split()
+        # Separately check bullet collisions with asteroids
+        for obj in asteroids:
+            for x in shots:
+                if x.collision(obj):
+                    x.kill()
+                    # Create particles at asteroid position before splitting
+                    for _ in range(10):
+                        particles.append(Particle(obj.position))
+                    obj.split()
+      
+        particles = [particle for particle in particles if particle.is_alive()]
+        for particle in particles:
+            particle.update()            
 
         screen.fill("black")
 
         for obj in drawable:
             obj.draw(screen)
+
+        for particle in particles:
+            particle.draw(screen)
+            hud.draw(screen, player)
 
         # Add HUD drawing here
         hud.draw(screen, player)    

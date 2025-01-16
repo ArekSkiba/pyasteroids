@@ -21,6 +21,19 @@ class Player(CircleShape):
         c = self.position - forward * self.radius + right
         return [a, b, c]
     
+    def wrap_position(self):
+        # Wrap horizontally
+        if self.position.x > SCREEN_WIDTH:
+            self.position.x = 0
+        elif self.position.x < 0:
+            self.position.x = SCREEN_WIDTH
+        
+        # Wrap vertically
+        if self.position.y > SCREEN_HEIGHT:
+            self.position.y = 0
+        elif self.position.y < 0:
+            self.position.y = SCREEN_HEIGHT
+
     def draw(self, screen):
         # Only draw if not invulnerable OR if timer is even
         if not self.invulnerable or int(self.invulnerability_timer * 10) % 2 == 0:
@@ -32,13 +45,13 @@ class Player(CircleShape):
     def move(self, dt):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
         self.position += forward * PLAYER_SPEED * dt
+        self.wrap_position()
 
     def shoot(self):
         if self.timer <= 0:
             bullet = Shot(self.position, SHOT_RADIUS)
             bullet.velocity = pygame.Vector2(0, 1).rotate(self.rotation) * PLAYER_SHOOT_SPEED
             self.timer = PLAYER_SHOOT_COOLDOWN
-
 
     def update(self, dt):
         self.timer -= dt
